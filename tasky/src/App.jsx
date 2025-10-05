@@ -5,6 +5,7 @@ import AddTaskForm from './components/Form';
 
 
 function App() {
+  // Task state
   const [taskState, setTaskState] = useState({
     tasks: [
       { id: 1, title: "Dishes", description: "Empty dishwasher", deadline: "Today", done: false },
@@ -13,19 +14,63 @@ function App() {
     ]
   });
 
-    const doneHandler = (taskIndex) => {
+  // Form state
+  const [formState, setFormState] = useState({
+    title: "",
+    description: "",
+    deadline: ""
+  });
+
+  // Toggle task done status
+  const doneHandler = (taskIndex) => {
     const tasks = [...taskState.tasks];
     tasks[taskIndex].done = !tasks[taskIndex].done;
-    setTaskState({tasks});
-    console.log(`${taskIndex} ${tasks[taskIndex].done}`);
+    setTaskState({ tasks });
   }
 
-   const deleteHandler = (taskIndex) => {
+  // Delete a task
+  const deleteHandler = (taskIndex) => {
     const tasks = [...taskState.tasks];
     tasks.splice(taskIndex, 1);
-    setTaskState({tasks});
-  } 
+    setTaskState({ tasks });
+  }
 
+  // Handle form input changes
+  const formChangeHandler = (event) => {
+    let form = { ...formState };
+
+    switch(event.target.name) {
+      case "title":
+        form.title = event.target.value;
+        break;
+      case "description":
+        form.description = event.target.value;
+        break;
+      case "deadline":
+        form.deadline = event.target.value;
+        break;
+      default:
+        form = formState;
+    }
+
+    setFormState(form);
+    console.log(formState); // For debugging
+  }
+
+  // Handle form submission
+  const formSubmitHandler = (event) => {
+    event.preventDefault();
+
+    const tasks = [...taskState.tasks];
+    const form = { ...formState };
+    form.id = uuidv4();
+
+    tasks.push(form);
+    setTaskState({ tasks });
+
+    // Optional: reset form
+    setFormState({ title: "", description: "", deadline: "" });
+  }
 
   return (
     <div className="container">
@@ -38,14 +83,10 @@ function App() {
           deadline={task.deadline}
           done={task.done}
           markDone={() => doneHandler(index)}
-          deleteTask = {() => deleteHandler(index)}
-
-          
-          
+          deleteTask={() => deleteHandler(index)}
         />
       ))}
-      <AddTaskForm />
-      
+      <AddTaskForm submit={formSubmitHandler} change={formChangeHandler} />
     </div>
   );
 }
