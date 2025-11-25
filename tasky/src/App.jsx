@@ -2,38 +2,51 @@ import './App.css';
 import Task from './components/Task';
 import React, { useState } from 'react';
 import AddTaskForm from './components/Form';
+import React, { useState, useEffect } from 'react';
+import {getTasks, addTask, deleteTask, updateTask} from "./api/tasky-api";
 
 
 function App() {
   // Task state
-  const [taskState, setTaskState] = useState({
-    tasks: [
-      { id: 1, title: "Dishes", description: "Empty dishwasher", deadline: "Today", done: false },
-      { id: 2, title: "Laundry", description: "Fold clothes and put away", deadline: "Tomorrow", done: false },
-      { id: 3, title: "Tidy up", description: "Clean the room", deadline: "Today", done: false }
-    ]
-  });
+
+const [ taskState, setTaskState ] = useState({tasks: []});
+
+useEffect(() => {
+    getTasks().then(tasks => {
+      setTaskState({tasks: tasks});
+    });
+  }, []);	
+
+
+
 
   // Form state
-  const [formState, setFormState] = useState({
+    const [ formState, setFormState ] = useState({
     title: "",
     description: "",
-    deadline: ""
+    deadline: "",
+    priority: "Low"
   });
 
+
   // Toggle task done status
-  const doneHandler = (taskIndex) => {
-    const tasks = [...taskState.tasks];
-    tasks[taskIndex].done = !tasks[taskIndex].done;
-    setTaskState({ tasks });
-  }
+     const doneHandler = (taskIndex) => {
+      const tasks = [...taskState.tasks];
+      tasks[taskIndex].done = !tasks[taskIndex].done;
+      updateTask(tasks[taskIndex]);
+      setTaskState({tasks});
+    }
+
 
   // Delete a task
-  const deleteHandler = (taskIndex) => {
+   const deleteHandler = (taskIndex) => {
     const tasks = [...taskState.tasks];
+    const id=tasks[taskIndex]._id;
     tasks.splice(taskIndex, 1);
-    setTaskState({ tasks });
+    deleteTask(id);
+    setTaskState({tasks});
   }
+
 
   // Handle form input changes
   const formChangeHandler = (event) => {
@@ -58,8 +71,15 @@ function App() {
   }
 
   // Handle form submission
-  const formSubmitHandler = (event) => {
+  const formSubmitHandler = async (event) => {
     event.preventDefault();
+    const tasks = taskState.tasks?[...taskState.tasks]:[];
+    const form = {...formState};
+    const newTask = await addTask(form);
+    tasks.push(newTask);
+    setTaskState({tasks});
+  }
+
 
     const tasks = [...taskState.tasks];
     const form = { ...formState };
@@ -77,7 +97,7 @@ function App() {
       <h1>Tasky</h1>
       {taskState.tasks.map((task, index) => (
         <Task
-          key={task.id}
+         key={task._id}        
           title={task.title}
           description={task.description}
           deadline={task.deadline}
